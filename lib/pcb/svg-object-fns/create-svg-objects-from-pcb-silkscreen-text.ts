@@ -208,6 +208,45 @@ export function createSvgObjectsFromPcbSilkscreenText(
       break
   }
 
+  const maskId =
+    "pcb-silkscreen-text-knockout-mask-" +
+    (pcbSilkscreenText.pcb_silkscreen_text_id ||
+      pcbSilkscreenText.pcb_component_id ||
+      Math.random().toString(36).slice(2))
+
+  const maskObject: SvgObject = {
+    name: "mask",
+    type: "element",
+    attributes: {
+      id: maskId,
+      maskUnits: "userSpaceOnUse",
+    },
+    children: [
+      {
+        name: "rect",
+        type: "element",
+        attributes: {
+          x: rectX.toString(),
+          y: rectY.toString(),
+          width: rectWidth.toString(),
+          height: rectHeight.toString(),
+          fill: "#fff",
+          transform: matrixToString(textTransform),
+        },
+        children: [],
+        value: "",
+      },
+      {
+        ...svgObject,
+        attributes: {
+          ...svgObject.attributes,
+          fill: "#000",
+        },
+      },
+    ],
+    value: "",
+  }
+
   const rectObject: SvgObject = {
     name: "rect",
     type: "element",
@@ -221,6 +260,7 @@ export function createSvgObjectsFromPcbSilkscreenText(
       class: `pcb-silkscreen-text-knockout-area pcb-silkscreen-${layer}`,
       "data-pcb-silkscreen-text-id": pcbSilkscreenText.pcb_component_id,
       stroke: "none",
+      mask: `url(#${maskId})`,
     },
     children: [],
     value: "",
@@ -228,5 +268,5 @@ export function createSvgObjectsFromPcbSilkscreenText(
 
   svgObject.attributes.transform = matrixToString(textTransform)
 
-  return [rectObject, svgObject]
+  return [maskObject, rectObject]
 }
