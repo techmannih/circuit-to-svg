@@ -57,5 +57,10 @@ test(" knockout silkscreen text", () => {
     },
   ])
 
-  expect(result).toMatchSvgSnapshot(import.meta.path + "knockout_padding")
+  const withImage = result.replace(
+    '<rect class="boundary"',
+    '<image href="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&amp;auto=format&amp;fit=crop&amp;w=1200&amp;q=80" x="0" y="0" width="800" height="600" preserveAspectRatio="xMidYMid slice"/><rect class="boundary"',
+  )
+
+  expect(withImage).toMatchSvgSnapshot(import.meta.path + "knockout_padding")
 })
