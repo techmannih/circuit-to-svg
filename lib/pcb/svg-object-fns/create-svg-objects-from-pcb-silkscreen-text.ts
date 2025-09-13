@@ -103,9 +103,6 @@ export function createSvgObjectsFromPcbSilkscreenText(
   const silkscreenColor =
     layer === "bottom" ? colorMap.silkscreen.bottom : colorMap.silkscreen.top
 
-  const boardColor =
-    layer === "bottom" ? colorMap.soldermask.bottom : colorMap.soldermask.top
-
   const lines = text.split("\n")
 
   const children: SvgObject[] =
@@ -138,29 +135,33 @@ export function createSvgObjectsFromPcbSilkscreenText(
           ],
         }))
 
-  const svgObject: SvgObject = {
+  const baseTextAttributes = {
+    x: "0",
+    y: "0",
+    dx: dx.toString(),
+    dy: dy.toString(),
+    "font-family": "Arial, sans-serif",
+    "font-size": transformedFontSize.toString(),
+    "text-anchor": textAnchor,
+    "dominant-baseline": dominantBaseline,
+    transform: matrixToString(textTransform),
+    stroke: "none",
+  }
+
+  const textObject: SvgObject = {
     name: "text",
     type: "element",
     attributes: {
-      x: "0",
-      y: "0",
-      dx: dx.toString(),
-      dy: dy.toString(),
-      fill: is_knockout ? boardColor : silkscreenColor,
-      "font-family": "Arial, sans-serif",
-      "font-size": transformedFontSize.toString(),
-      "text-anchor": textAnchor,
-      "dominant-baseline": dominantBaseline,
-      transform: matrixToString(textTransform),
+      ...baseTextAttributes,
+      fill: silkscreenColor,
       class: `pcb-silkscreen-text pcb-silkscreen-${layer}`,
       "data-pcb-silkscreen-text-id": pcbSilkscreenText.pcb_component_id,
-      stroke: "none",
     },
     children,
     value: "",
   }
 
-  if (!is_knockout) return [svgObject]
+  if (!is_knockout) return [textObject]
 
   const paddingLeft = knockout_padding.left * Math.abs(transform.a)
   const paddingRight = knockout_padding.right * Math.abs(transform.a)
@@ -208,6 +209,44 @@ export function createSvgObjectsFromPcbSilkscreenText(
       break
   }
 
+  const maskId = `pcb-silkscreen-text-knockout-mask-${pcbSilkscreenText.pcb_silkscreen_text_id}`
+
+  const maskObject: SvgObject = {
+    name: "mask",
+    type: "element",
+    attributes: {
+      id: maskId,
+      maskUnits: "userSpaceOnUse",
+    },
+    children: [
+      {
+        name: "rect",
+        type: "element",
+        attributes: {
+          x: rectX.toString(),
+          y: rectY.toString(),
+          width: rectWidth.toString(),
+          height: rectHeight.toString(),
+          fill: "white",
+          transform: matrixToString(textTransform),
+        },
+        children: [],
+        value: "",
+      },
+      {
+        name: "text",
+        type: "element",
+        attributes: {
+          ...baseTextAttributes,
+          fill: "black",
+        },
+        children,
+        value: "",
+      },
+    ],
+    value: "",
+  }
+
   const rectObject: SvgObject = {
     name: "rect",
     type: "element",
@@ -217,6 +256,7 @@ export function createSvgObjectsFromPcbSilkscreenText(
       width: rectWidth.toString(),
       height: rectHeight.toString(),
       fill: silkscreenColor,
+      mask: `url(#${maskId})`,
       transform: matrixToString(textTransform),
       class: `pcb-silkscreen-text-knockout-area pcb-silkscreen-${layer}`,
       "data-pcb-silkscreen-text-id": pcbSilkscreenText.pcb_component_id,
@@ -226,7 +266,5 @@ export function createSvgObjectsFromPcbSilkscreenText(
     value: "",
   }
 
-  svgObject.attributes.transform = matrixToString(textTransform)
-
-  return [rectObject, svgObject]
+  return [maskObject, rectObject]
 }
