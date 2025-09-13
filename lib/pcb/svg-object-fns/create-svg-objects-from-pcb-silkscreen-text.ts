@@ -235,12 +235,30 @@ export function createSvgObjectsFromPcbSilkscreenText(
     value: "",
   }
 
+  const maskCorners = [
+    [rectX, rectY],
+    [rectX + rectWidth, rectY],
+    [rectX, rectY + rectHeight],
+    [rectX + rectWidth, rectY + rectHeight],
+  ].map(([x, y]) => applyToPoint(textTransform, [x, y]))
+
+  const maskXs = maskCorners.map(([x]) => x)
+  const maskYs = maskCorners.map(([, y]) => y)
+  const maskX = Math.min(...maskXs)
+  const maskY = Math.min(...maskYs)
+  const maskWidth = Math.max(...maskXs) - maskX
+  const maskHeight = Math.max(...maskYs) - maskY
+
   const maskObject: SvgObject = {
     name: "mask",
     type: "element",
     attributes: {
       id: maskId,
       maskUnits: "userSpaceOnUse",
+      x: maskX.toString(),
+      y: maskY.toString(),
+      width: maskWidth.toString(),
+      height: maskHeight.toString(),
     },
     children: [maskRect, maskText],
     value: "",
