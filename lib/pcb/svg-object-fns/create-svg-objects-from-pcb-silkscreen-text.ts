@@ -47,7 +47,13 @@ export function createSvgObjectsFromPcbSilkscreenText(
     anchor_position.x,
     anchor_position.y,
   ])
-  const transformedFontSize = font_size * Math.abs(transform.a)
+  // Determine the overall scale from the board transform. Using only
+  // `transform.a` fails when the transform contains rotation because `a`
+  // becomes the cosine component and the resulting font-size collapses
+  // toward zero. Instead, derive the scale from the matrix column length so
+  // pure rotations yield a scale of 1.
+  const transformScale = Math.hypot(transform.a, transform.b)
+  const transformedFontSize = font_size * transformScale
 
   // Alignment → SVG text attributes
   let textAnchor = "middle"
@@ -163,10 +169,10 @@ export function createSvgObjectsFromPcbSilkscreenText(
   if (!is_knockout) return [textObject]
 
   // Knockout case: build a mask (white keeps, black cuts text)
-  const padL = knockout_padding.left * Math.abs(transform.a)
-  const padR = knockout_padding.right * Math.abs(transform.a)
-  const padT = knockout_padding.top * Math.abs(transform.a)
-  const padB = knockout_padding.bottom * Math.abs(transform.a)
+  const padL = knockout_padding.left * transformScale
+  const padR = knockout_padding.right * transformScale
+  const padT = knockout_padding.top * transformScale
+  const padB = knockout_padding.bottom * transformScale
 
   // Approximate width/height (character-count based)
   const maxLineLen = Math.max(...lines.map((l) => l.length), 0)
