@@ -43,8 +43,12 @@ export function createSvgObjectsFromPcbSilkscreenText(
   }
 
   // Position & size after board transform
-  const [tx, ty] = applyToPoint(transform, [anchor_position.x, anchor_position.y])
-  const transformedFontSize = font_size * Math.abs(transform.a)
+  const [tx, ty] = applyToPoint(transform, [
+    anchor_position.x,
+    anchor_position.y,
+  ])
+  const scaleFactor = Math.hypot(transform.a, transform.b)
+  const transformedFontSize = font_size * scaleFactor
 
   // Alignment → SVG text attributes
   let textAnchor = "middle"
@@ -160,10 +164,10 @@ export function createSvgObjectsFromPcbSilkscreenText(
   if (!is_knockout) return [textObject]
 
   // Knockout case: build a mask (white keeps, black cuts text)
-  const padL = knockout_padding.left * Math.abs(transform.a)
-  const padR = knockout_padding.right * Math.abs(transform.a)
-  const padT = knockout_padding.top * Math.abs(transform.a)
-  const padB = knockout_padding.bottom * Math.abs(transform.a)
+  const padL = knockout_padding.left * scaleFactor
+  const padR = knockout_padding.right * scaleFactor
+  const padT = knockout_padding.top * scaleFactor
+  const padB = knockout_padding.bottom * scaleFactor
 
   // Approximate width/height (character-count based)
   const maxLineLen = Math.max(...lines.map((l) => l.length), 0)
