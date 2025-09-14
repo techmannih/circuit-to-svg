@@ -43,7 +43,10 @@ export function createSvgObjectsFromPcbSilkscreenText(
   }
 
   // Position & size after board transform
-  const [tx, ty] = applyToPoint(transform, [anchor_position.x, anchor_position.y])
+  const [tx, ty] = applyToPoint(transform, [
+    anchor_position.x,
+    anchor_position.y,
+  ])
   const transformedFontSize = font_size * Math.abs(transform.a)
 
   // Alignment → SVG text attributes
@@ -237,6 +240,25 @@ export function createSvgObjectsFromPcbSilkscreenText(
     value: "",
   }
 
+  // Calculate the mask's bounding box **after** transformations so that the
+  // mask area fully contains the rotated/scaled rectangle. Without this, the
+  // mask may clip when text is rotated because the mask's `x`, `y`, `width`
+  // and `height` are in the parent (board) coordinate system.
+  const transformedCorners = [
+    applyToPoint(textTransform, [rectX, rectY]),
+    applyToPoint(textTransform, [rectX + rectWidth, rectY]),
+    applyToPoint(textTransform, [rectX, rectY + rectHeight]),
+    applyToPoint(textTransform, [rectX + rectWidth, rectY + rectHeight]),
+  ]
+  const xs = transformedCorners.map((p) => p[0])
+  const ys = transformedCorners.map((p) => p[1])
+  const maskBounds = {
+    x: Math.min(...xs),
+    y: Math.min(...ys),
+    width: Math.max(...xs) - Math.min(...xs),
+    height: Math.max(...ys) - Math.min(...ys),
+  }
+
   const maskObject: SvgObject = {
     name: "mask",
     type: "element",
@@ -244,11 +266,11 @@ export function createSvgObjectsFromPcbSilkscreenText(
       id: maskId,
       maskUnits: "userSpaceOnUse",
       maskContentUnits: "userSpaceOnUse",
-      // Bound the mask to the rect in local coords
-      x: rectX.toString(),
-      y: rectY.toString(),
-      width: rectWidth.toString(),
-      height: rectHeight.toString(),
+      // Bound the mask to the rect in global coords
+      x: maskBounds.x.toString(),
+      y: maskBounds.y.toString(),
+      width: maskBounds.width.toString(),
+      height: maskBounds.height.toString(),
       style: "mask-type:luminance",
     },
     children: [maskRect, maskText],
