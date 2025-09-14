@@ -8,6 +8,8 @@ import {
   scale,
   toString as matrixToString,
 } from "transformation-matrix"
+import { estimateTextWidth } from "../../sch/estimate-text-width"
+import { arialTextMetrics } from "../../sch/arial-text-metrics"
 import type { PcbContext } from "../convert-circuit-json-to-pcb-svg"
 
 export function createSvgObjectsFromPcbSilkscreenText(
@@ -29,7 +31,15 @@ export function createSvgObjectsFromPcbSilkscreenText(
       top: 0.2,
       bottom: 0.2,
     },
-  } = pcbSilkscreenText
+  } = pcbSilkscreenText as PcbSilkscreenText & {
+    is_knockout?: boolean
+    knockout_padding?: {
+      left: number
+      right: number
+      top: number
+      bottom: number
+    }
+  }
 
   if (layerFilter && layer !== layerFilter) return []
 
@@ -166,9 +176,12 @@ export function createSvgObjectsFromPcbSilkscreenText(
   const padT = knockout_padding.top * Math.abs(transform.a)
   const padB = knockout_padding.bottom * Math.abs(transform.a)
 
-  const maxLineLen = Math.max(...lines.map((l) => l.length), 0)
-  const textWidth = (maxLineLen * transformedFontSize) / 2
-  const textHeight = lines.length * transformedFontSize
+  const textWidths = lines.map(
+    (line) => estimateTextWidth(line) * transformedFontSize,
+  )
+  const textWidth = Math.max(0, ...textWidths)
+  const lineHeightRatio = arialTextMetrics["0"].height / 27
+  const textHeight = lines.length * transformedFontSize * lineHeightRatio
 
   const rectWidth = textWidth + padL + padR
   const rectHeight = textHeight + padT + padB

@@ -1,7 +1,7 @@
 import { test, expect } from "bun:test"
 import { convertCircuitJsonToPcbSvg } from "lib"
 
-test(" knockout silkscreen text", () => {
+test("knockout silkscreen text right anchors", () => {
   const result = convertCircuitJsonToPcbSvg([
     {
       type: "pcb_board",
@@ -16,41 +16,40 @@ test(" knockout silkscreen text", () => {
     {
       type: "pcb_silkscreen_text",
       layer: "top",
-      pcb_silkscreen_text_id: "pcb_silkscreen_text_top_left",
-      font: "tscircuit2024",
-      font_size: 1,
-      pcb_component_id: "pcb_generic_component_0",
-      anchor_position: { x: -3, y: -3 },
-      anchor_alignment: "top_left",
-      text: "top_left",
-      is_knockout: true,
-    } as any,
-    {
-      type: "pcb_silkscreen_text",
-      layer: "top",
-      pcb_silkscreen_text_id: "pcb_silkscreen_text_bottom_right",
+      pcb_silkscreen_text_id: "pcb_silkscreen_text_top_right_knockout",
       font: "tscircuit2024",
       font_size: 1,
       pcb_component_id: "pcb_generic_component_0",
       anchor_position: { x: 3, y: 3 },
-      anchor_alignment: "center",
-      text: "center",
+      anchor_alignment: "top_right",
+      text: "top_right",
       is_knockout: true,
     } as any,
     {
       type: "pcb_silkscreen_text",
       layer: "top",
-      pcb_silkscreen_text_id: "pcb_silkscreen_text_center_0",
+      pcb_silkscreen_text_id: "pcb_silkscreen_text_center_right_knockout",
       font: "tscircuit2024",
       font_size: 1,
       pcb_component_id: "pcb_generic_component_0",
-      anchor_position: { x: 0, y: 0 },
-      anchor_alignment: "center",
-      text: "center",
+      anchor_position: { x: 3, y: 0 },
+      anchor_alignment: "center_right",
+      text: "center_right",
       is_knockout: true,
-      knockout_padding: { left: 0.2, right: 0.8, top: 0, bottom: 0.8 },
+    } as any,
+    {
+      type: "pcb_silkscreen_text",
+      layer: "top",
+      pcb_silkscreen_text_id: "pcb_silkscreen_text_bottom_right_knockout",
+      font: "tscircuit2024",
+      font_size: 1,
+      pcb_component_id: "pcb_generic_component_0",
+      anchor_position: { x: 3, y: -3 },
+      anchor_alignment: "bottom_right",
+      text: "bottom_right",
+      is_knockout: true,
     } as any,
   ])
 
-  expect(result).toMatchSvgSnapshot(import.meta.path + "knockout_padding")
+  expect(result).toMatchSvgSnapshot(import.meta.path)
 })
