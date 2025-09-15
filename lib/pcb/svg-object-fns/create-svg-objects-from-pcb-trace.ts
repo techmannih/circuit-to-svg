@@ -9,7 +9,7 @@ export function createSvgObjectsFromPcbTrace(
   trace: PCBTrace,
   ctx: PcbContext,
 ): SvgObject[] {
-  const { transform, layer: layerFilter, colorMap } = ctx
+  const { transform, layer: layerFilter, colorMap, renderSolderMask } = ctx
   if (!trace.route || !Array.isArray(trace.route) || trace.route.length < 2)
     return []
 
@@ -25,9 +25,11 @@ export function createSvgObjectsFromPcbTrace(
     if (!layer) continue
     if (layerFilter && layer !== layerFilter) continue
 
-    const layerColor =
-      colorMap.soldermask[layer as keyof typeof colorMap.soldermask] ??
-      layerNameToColor(layer, colorMap)
+    const layerColor = renderSolderMask
+      ?
+          colorMap.soldermask[layer as keyof typeof colorMap.soldermask] ??
+        layerNameToColor(layer, colorMap)
+      : layerNameToColor(layer, colorMap)
 
     const traceWidth =
       "width" in start ? start.width : "width" in end ? end.width : null

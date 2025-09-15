@@ -10,16 +10,19 @@ const circuit: any = [
     height: 5,
   },
   {
-    type: "pcb_trace",
-    pcb_trace_id: "trace0",
-    route: [
-      { route_type: "wire", x: -2, y: 0, width: 0.2, layer: "top" },
-      { route_type: "wire", x: 2, y: 0, width: 0.2, layer: "top" },
-    ],
+    type: "pcb_smtpad",
+    pcb_smtpad_id: "pad0",
+    layer: "top",
+    shape: "rect",
+    width: 1,
+    height: 1,
+    x: 0,
+    y: 0,
+    solder_mask: true,
   },
 ]
 
-test("traces use soldermask color when specified", () => {
+test("smt pads can be covered by soldermask", () => {
   const svg = convertCircuitJsonToPcbSvg(circuit, {
     renderSolderMask: true,
     colorOverrides: {

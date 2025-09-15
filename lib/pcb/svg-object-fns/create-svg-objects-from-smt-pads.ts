@@ -7,9 +7,22 @@ export function createSvgObjectsFromSmtPad(
   pad: PcbSmtPad,
   ctx: PcbContext,
 ): any {
-  const { transform, layer: layerFilter, colorMap } = ctx
+  const { transform, layer: layerFilter, colorMap, renderSolderMask } = ctx
 
   if (layerFilter && pad.layer !== layerFilter) return []
+
+  const isCovered =
+    renderSolderMask &&
+    ((pad as any).solder_mask ||
+      (pad as any).soldermask ||
+      (pad as any).covered ||
+      (pad as any).tented)
+
+  const padColor = isCovered
+    ?
+        colorMap.soldermask[pad.layer as keyof typeof colorMap.soldermask] ??
+      layerNameToColor(pad.layer, colorMap)
+    : layerNameToColor(pad.layer, colorMap)
 
   if (pad.shape === "rect" || pad.shape === "rotated_rect") {
     const width = pad.width * Math.abs(transform.a)
@@ -23,7 +36,7 @@ export function createSvgObjectsFromSmtPad(
           type: "element",
           attributes: {
             class: "pcb-pad",
-            fill: layerNameToColor(pad.layer, colorMap),
+            fill: padColor,
             x: (-width / 2).toString(),
             y: (-height / 2).toString(),
             width: width.toString(),
@@ -41,7 +54,7 @@ export function createSvgObjectsFromSmtPad(
         type: "element",
         attributes: {
           class: "pcb-pad",
-          fill: layerNameToColor(pad.layer, colorMap),
+          fill: padColor,
           x: (x - width / 2).toString(),
           y: (y - height / 2).toString(),
           width: width.toString(),
@@ -64,7 +77,7 @@ export function createSvgObjectsFromSmtPad(
         type: "element",
         attributes: {
           class: "pcb-pad",
-          fill: layerNameToColor(pad.layer, colorMap),
+          fill: padColor,
           x: (x - width / 2).toString(),
           y: (y - height / 2).toString(),
           width: width.toString(),
@@ -86,7 +99,7 @@ export function createSvgObjectsFromSmtPad(
         type: "element",
         attributes: {
           class: "pcb-pad",
-          fill: layerNameToColor(pad.layer, colorMap),
+          fill: padColor,
           cx: x.toString(),
           cy: y.toString(),
           r: radius.toString(),
@@ -107,7 +120,7 @@ export function createSvgObjectsFromSmtPad(
         type: "element",
         attributes: {
           class: "pcb-pad",
-          fill: layerNameToColor(pad.layer),
+          fill: padColor,
           points: points.map((p) => p.join(",")).join(" "),
           "data-layer": pad.layer,
         },
