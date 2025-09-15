@@ -9,7 +9,7 @@ export function createSvgObjectsFromPcbTrace(
   trace: PCBTrace,
   ctx: PcbContext,
 ): SvgObject[] {
-  const { transform, layer: layerFilter, colorMap } = ctx
+  const { transform, layer: layerFilter, colorMap, renderSolderMask } = ctx
   if (!trace.route || !Array.isArray(trace.route) || trace.route.length < 2)
     return []
 
@@ -25,34 +25,54 @@ export function createSvgObjectsFromPcbTrace(
     if (!layer) continue
     if (layerFilter && layer !== layerFilter) continue
 
-    const layerColor =
+    const copperColor = layerNameToColor(layer, colorMap)
+    const solderMaskColor =
       colorMap.soldermask[layer as keyof typeof colorMap.soldermask] ??
-      layerNameToColor(layer, colorMap)
+      copperColor
 
     const traceWidth =
       "width" in start ? start.width : "width" in end ? end.width : null
 
-    const svgObject: SvgObject = {
+    const baseAttributes = {
+      d: `M ${startPoint[0]} ${startPoint[1]} L ${endPoint[0]} ${endPoint[1]}`,
+      "stroke-width": traceWidth
+        ? (traceWidth * Math.abs(transform.a)).toString()
+        : "0.3",
+      "stroke-linecap": "round",
+      "stroke-linejoin": "round",
+      "shape-rendering": "crispEdges",
+      "data-layer": layer,
+    }
+
+    // Always draw the copper trace
+    svgObjects.push({
       name: "path",
       type: "element",
       value: "",
       children: [],
       attributes: {
         class: "pcb-trace",
-        stroke: layerColor,
+        stroke: renderSolderMask ? copperColor : solderMaskColor,
         fill: "none",
-        d: `M ${startPoint[0]} ${startPoint[1]} L ${endPoint[0]} ${endPoint[1]}`,
-        "stroke-width": traceWidth
-          ? (traceWidth * Math.abs(transform.a)).toString()
-          : "0.3",
-        "stroke-linecap": "round",
-        "stroke-linejoin": "round",
-        "shape-rendering": "crispEdges",
-        "data-layer": layer,
+        ...baseAttributes,
       },
-    }
+    })
 
-    svgObjects.push(svgObject)
+    // When rendering solder mask, draw mask on top of copper
+    if (renderSolderMask) {
+      svgObjects.push({
+        name: "path",
+        type: "element",
+        value: "",
+        children: [],
+        attributes: {
+          class: "pcb-soldermask",
+          stroke: solderMaskColor,
+          fill: "none",
+          ...baseAttributes,
+        },
+      })
+    }
   }
 
   svgObjects.sort((a, b) => {
