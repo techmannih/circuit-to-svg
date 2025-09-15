@@ -74,7 +74,7 @@ export function createSvgObjectsFromPcbTrace(
         },
       }
 
-      svgObjects.push(copperObject, maskObject)
+      svgObjects.push(maskObject, copperObject)
     } else {
       const maskOnlyObject: SvgObject = {
         name: "path",
