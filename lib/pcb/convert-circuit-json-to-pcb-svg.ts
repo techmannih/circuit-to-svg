@@ -61,6 +61,10 @@ const OBJECT_ORDER: AnyCircuitElement["type"][] = [
   "pcb_board",
 ]
 
+const OBJECT_PRIORITY = new Map(
+  OBJECT_ORDER.map((type, index) => [type, index] as const),
+)
+
 interface PointObjectNotation {
   x: number
   y: number
@@ -299,21 +303,53 @@ export function convertCircuitJsonToPcbSvg(
     return elm.type === "pcb_trace" || elm.type === "pcb_smtpad"
   }
 
-  let svgObjects = circuitJson
-    .sort((a, b) => {
-      const layerA = getLayer(a)
-      const layerB = getLayer(b)
+  function getSvgCopperPriority(obj: SvgObject) {
+    const layerAttr = obj.attributes?.["data-layer"]
+    if (!layerAttr) return undefined
 
-      if (isCopper(a) && isCopper(b) && layerA !== layerB) {
-        return getCopperLayerPriority(layerA) - getCopperLayerPriority(layerB)
-      }
+    const layer = `${layerAttr}`.toLowerCase()
+    if (!isCopperLayerName(layer)) return undefined
 
-      return (
-        (OBJECT_ORDER.indexOf(b.type) ?? 9999) -
-        (OBJECT_ORDER.indexOf(a.type) ?? 9999)
-      )
-    })
-    .flatMap((elm) => createSvgObjects({ elm, circuitJson, ctx }))
+    return getCopperLayerPriority(layer)
+  }
+
+  function getTypePriority(type: AnyCircuitElement["type"]) {
+    return OBJECT_PRIORITY.get(type) ?? OBJECT_PRIORITY.size
+  }
+
+  const sortedElements = [...circuitJson].sort((a, b) => {
+    const layerA = getLayer(a)
+    const layerB = getLayer(b)
+
+    if (isCopper(a) && isCopper(b) && layerA !== layerB) {
+      return getCopperLayerPriority(layerA) - getCopperLayerPriority(layerB)
+    }
+
+    return getTypePriority(b.type) - getTypePriority(a.type)
+  })
+
+  const svgObjectsWithMeta = sortedElements.flatMap((elm) =>
+    createSvgObjects({ elm, circuitJson, ctx }).map((obj) => ({
+      obj,
+      sourceType: elm.type,
+    })),
+  )
+
+  svgObjectsWithMeta.sort((a, b) => {
+    const layerPriorityA = getSvgCopperPriority(a.obj)
+    const layerPriorityB = getSvgCopperPriority(b.obj)
+
+    const hasCopperA = layerPriorityA !== undefined
+    const hasCopperB = layerPriorityB !== undefined
+
+    if (hasCopperA && hasCopperB && layerPriorityA !== layerPriorityB) {
+      return layerPriorityA - layerPriorityB
+    }
+
+    return getTypePriority(b.sourceType) - getTypePriority(a.sourceType)
+  })
+
+  let svgObjects = svgObjectsWithMeta.map(({ obj }) => obj)
 
   let strokeWidth = String(0.05 * scaleFactor)
 
