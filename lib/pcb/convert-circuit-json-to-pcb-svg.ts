@@ -3,7 +3,6 @@ import type {
   AnyCircuitElement,
   pcb_cutout,
   PcbCutout,
-  VisibleLayer,
 } from "circuit-json"
 import { type INode as SvgObject, stringify } from "svgson"
 import {
@@ -33,9 +32,14 @@ import { createSvgObjectsFromPcbCopperPour } from "./svg-object-fns/create-svg-o
 import {
   DEFAULT_PCB_COLOR_MAP,
   type CopperColorMap,
+  type CopperLayerName,
   type PcbColorMap,
   type PcbColorOverrides,
 } from "./colors"
+import {
+  getCopperLayerPriority,
+  isCopperLayerName,
+} from "./copper-layer-order"
 import { createSvgObjectsFromPcbComponent } from "./svg-object-fns/create-svg-objects-from-pcb-component"
 import { getSoftwareUsedString } from "../utils/get-software-used-string"
 import { CIRCUIT_TO_SVG_VERSION } from "../package-version"
@@ -271,11 +275,9 @@ export function convertCircuitJsonToPcbSvg(
     renderSolderMask: options?.renderSolderMask,
   }
 
-  function getLayer(elm: AnyCircuitElement): VisibleLayer | undefined {
+  function getLayer(elm: AnyCircuitElement): CopperLayerName | undefined {
     if (elm.type === "pcb_smtpad") {
-      return elm.layer === "top" || elm.layer === "bottom"
-        ? elm.layer
-        : undefined
+      return isCopperLayerName(elm.layer) ? elm.layer : undefined
     }
     if (elm.type === "pcb_trace") {
       for (const seg of elm.route ?? []) {
@@ -285,7 +287,7 @@ export function convertCircuitJsonToPcbSvg(
           ("to_layer" in seg && seg.to_layer) ||
           undefined
 
-        if (candidate === "top" || candidate === "bottom") {
+        if (isCopperLayerName(candidate)) {
           return candidate
         }
       }
@@ -303,10 +305,7 @@ export function convertCircuitJsonToPcbSvg(
       const layerB = getLayer(b)
 
       if (isCopper(a) && isCopper(b) && layerA !== layerB) {
-        if (layerA === "top") return 1
-        if (layerB === "top") return -1
-        if (layerA === "bottom") return -1
-        if (layerB === "bottom") return 1
+        return getCopperLayerPriority(layerA) - getCopperLayerPriority(layerB)
       }
 
       return (

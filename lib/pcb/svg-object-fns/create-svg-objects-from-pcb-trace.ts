@@ -3,6 +3,7 @@ import { pairs } from "lib/utils/pairs"
 import type { INode as SvgObject } from "svgson"
 import { applyToPoint } from "transformation-matrix"
 import { layerNameToColor } from "../layer-name-to-color"
+import { getCopperLayerPriority } from "../copper-layer-order"
 import type { PcbContext } from "../convert-circuit-json-to-pcb-svg"
 
 export function createSvgObjectsFromPcbTrace(
@@ -102,13 +103,9 @@ export function createSvgObjectsFromPcbTrace(
     const layerA = a.attributes["data-layer"]
     const layerB = b.attributes["data-layer"]
 
-    if (layerA === "bottom" && layerB !== "bottom") {
-      return -1
-    }
-    if (layerA === "top" && layerB !== "top") {
-      return 1
-    }
-    return 0
+    if (layerA === layerB) return 0
+
+    return getCopperLayerPriority(layerA) - getCopperLayerPriority(layerB)
   })
 
   return svgObjects
