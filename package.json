@@ -10,7 +10,7 @@
   "scripts": {
     "start": "cosmos",
     "prepublish": "npm run build",
-    "build": "tsup-node ./lib/index.ts --format esm --dts --sourcemap --external tscircuit",
+    "build": "tsup-node ./lib/index.ts --format esm --dts --sourcemap --external tscircuit --external @resvg/resvg-wasm",
     "format": "biome format . --write",
     "format:check": "biome format .",
     "cosmos": "cosmos",
@@ -41,5 +41,8 @@
     "calculate-elbow": "0.0.12",
     "svgson": "^5.3.1",
     "transformation-matrix": "^2.16.1"
+  },
+  "peerDependencies": {
+    "@resvg/resvg-wasm": "^2.6.2"
   }
 }

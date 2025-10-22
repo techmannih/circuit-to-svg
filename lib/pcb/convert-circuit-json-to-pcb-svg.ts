@@ -61,7 +61,7 @@ interface PointObjectNotation {
   y: number
 }
 
-interface Options {
+export interface ConvertCircuitJsonToPcbSvgOptions {
   colorOverrides?: PcbColorOverrides
   width?: number
   height?: number
@@ -91,7 +91,7 @@ export interface PcbContext {
 
 export function convertCircuitJsonToPcbSvg(
   circuitJson: AnyCircuitElement[],
-  options?: Options,
+  options?: ConvertCircuitJsonToPcbSvgOptions,
 ): string {
   const drawPaddingOutsideBoard = options?.drawPaddingOutsideBoard ?? true
   const layer = options?.layer

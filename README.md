@@ -48,6 +48,7 @@ Explore the API sections below to render PCB, assembly, pinout, simulation, and 
 | [`convertCircuitJsonToAssemblySvg`](#convertcircuitjsontoassemblysvg) | Produce assembly view SVGs for board visualization. |
 | [`convertCircuitJsonToPinoutSvg`](#convertcircuitjsontopinoutsvg) | Build annotated pinout diagrams for boards and modules. |
 | [`convertCircuitJsonToSimulationGraphSvg`](#convertcircuitjsontosimulationgraphsvg) | Plot simulation experiment results as SVG graphs. |
+| [`convertCircuitJsonToPcbPng`](#convertcircuitjsontopcbpng) | Render PCB layouts to PNG textures using Resvg WASM. |
 
 ## API
 
@@ -109,6 +110,49 @@ const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson, {
   Defaults to `false`.
 - `includeVersion` – if `true`, add a `data-circuit-to-svg-version` attribute to
   the root `<svg>`.
+
+## convertCircuitJsonToPcbPng
+
+`convertCircuitJsonToPcbPng(circuitJson: AnyCircuitElement[], options?): Promise<Uint8Array | Buffer | string>`
+
+Converts a PCB layout description to a PNG texture using
+[`@resvg/resvg-wasm`](https://www.npmjs.com/package/@resvg/resvg-wasm).
+
+```bash
+npm install circuit-to-svg @resvg/resvg-wasm
+```
+
+```typescript
+import { convertCircuitJsonToPcbPng } from 'circuit-to-svg'
+import { readFile } from 'fs/promises'
+
+const circuitJson = /* ... */
+const wasmPath = await import.meta.resolve('@resvg/resvg-wasm/index_bg.wasm')
+
+const textureBytes = await convertCircuitJsonToPcbPng(circuitJson, {
+  width: 2048,
+  height: 2048,
+  backgroundColor: '#202020',
+  resvgInitModule: await readFile(new URL(wasmPath, import.meta.url)),
+})
+```
+
+### Options
+
+- Accepts all [`convertCircuitJsonToPcbSvg`](#convertcircuitjsontopcbsvg)
+  options, forwarding them to the SVG renderer.
+- `output` – choose the PNG output format:
+  - `'uint8array'` (default) – return raw bytes.
+  - `'buffer'` – return a Node.js `Buffer`.
+  - `'data-url'` – return a PNG data URL string.
+- `resvgModule` – provide a pre-imported `@resvg/resvg-wasm` module.
+- `resvgModuleLoader` – supply a lazy loader that resolves to the module.
+- `resvgInitModule` – custom WASM binary or response passed to `initWasm`.
+- `resvgRenderOptions` – override the render options passed to Resvg.
+
+When neither `resvgModule` nor `resvgModuleLoader` are provided, the function
+attempts to import `@resvg/resvg-wasm` automatically. If the WASM binary cannot
+be located automatically, pass it explicitly via `resvgInitModule`.
 
 ## convertCircuitJsonToAssemblySvg
 
