@@ -15,6 +15,7 @@ import { createSvgObjectsFromAssemblyPlatedHole } from "./svg-object-fns/create-
 import { createSvgObjectsFromAssemblySmtPad } from "./svg-object-fns/create-svg-objects-from-assembly-smt-pad"
 import { getSoftwareUsedString } from "../utils/get-software-used-string"
 import { CIRCUIT_TO_SVG_VERSION } from "../package-version"
+import { pcbBoardTextureDefs } from "../pcb/board-texture"
 
 const OBJECT_ORDER: AnyCircuitElement["type"][] = [
   "pcb_component",
@@ -91,6 +92,70 @@ export function convertCircuitJsonToAssemblySvg(
   const softwareUsedString = getSoftwareUsedString(soup)
   const version = CIRCUIT_TO_SVG_VERSION
 
+  const childElements: SvgObject[] = [
+    {
+      name: "style",
+      type: "element",
+      children: [
+        {
+          type: "text",
+          value: `
+              .assembly-component {
+                fill: none;
+                stroke: #000;
+              }
+              .assembly-board {
+                fill: #f2f2f2;
+                stroke: rgb(0,0,0);
+                stroke-opacity: 0.8;
+              }
+              .assembly-component-label {
+                fill: #000;
+                font-family: Arial, serif;
+                font-weight: bold;
+                dominant-baseline: middle;
+                text-anchor: middle;
+              }
+              .assembly-boundary {
+                fill: none;
+                stroke: #fff;
+                stroke-width: 0.2;
+              }
+            `,
+          name: "",
+          attributes: {},
+          children: [],
+        },
+      ],
+      value: "",
+      attributes: {},
+    },
+  ]
+
+  if (pcbBoardTextureDefs) {
+    childElements.push(pcbBoardTextureDefs)
+  }
+
+  childElements.push(
+    {
+      name: "rect",
+      type: "element",
+      attributes: {
+        fill: "#fff",
+        x: "0",
+        y: "0",
+        width: svgWidth.toString(),
+        height: svgHeight.toString(),
+      },
+      value: "",
+      children: [],
+    },
+    createSvgObjectFromAssemblyBoundary(transform, minX, minY, maxX, maxY),
+    ...svgObjects,
+  )
+
+  const needsXlinkNamespace = pcbBoardTextureDefs !== null
+
   const svgObject: SvgObject = {
     name: "svg",
     type: "element",
@@ -98,6 +163,9 @@ export function convertCircuitJsonToAssemblySvg(
       xmlns: "http://www.w3.org/2000/svg",
       width: svgWidth.toString(),
       height: svgHeight.toString(),
+      ...(needsXlinkNamespace && {
+        "xmlns:xlink": "http://www.w3.org/1999/xlink",
+      }),
       ...(softwareUsedString && {
         "data-software-used-string": softwareUsedString,
       }),
@@ -106,60 +174,7 @@ export function convertCircuitJsonToAssemblySvg(
       }),
     },
     value: "",
-    children: [
-      {
-        name: "style",
-        type: "element",
-        children: [
-          {
-            type: "text",
-            value: `
-              .assembly-component { 
-                fill: none; 
-                stroke: #000; 
-              }
-              .assembly-board { 
-                fill: #f2f2f2; 
-                stroke: rgb(0,0,0); 
-                stroke-opacity: 0.8;
-              }
-              .assembly-component-label { 
-                fill: #000; 
-                font-family: Arial, serif;
-                font-weight: bold;
-                dominant-baseline: middle;
-                text-anchor: middle;
-              }
-              .assembly-boundary { 
-                fill: none; 
-                stroke: #fff;
-                stroke-width: 0.2; 
-              }
-            `,
-            name: "",
-            attributes: {},
-            children: [],
-          },
-        ],
-        value: "",
-        attributes: {},
-      },
-      {
-        name: "rect",
-        type: "element",
-        attributes: {
-          fill: "#fff",
-          x: "0",
-          y: "0",
-          width: svgWidth.toString(),
-          height: svgHeight.toString(),
-        },
-        value: "",
-        children: [],
-      },
-      createSvgObjectFromAssemblyBoundary(transform, minX, minY, maxX, maxY),
-      ...svgObjects,
-    ].filter((child): child is SvgObject => child !== null),
+    children: childElements.filter((child): child is SvgObject => child !== null),
   }
 
   return stringify(svgObject)
