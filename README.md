@@ -48,6 +48,7 @@ Explore the API sections below to render PCB, assembly, pinout, simulation, and 
 | [`convertCircuitJsonToAssemblySvg`](#convertcircuitjsontoassemblysvg) | Produce assembly view SVGs for board visualization. |
 | [`convertCircuitJsonToPinoutSvg`](#convertcircuitjsontopinoutsvg) | Build annotated pinout diagrams for boards and modules. |
 | [`convertCircuitJsonToSimulationGraphSvg`](#convertcircuitjsontosimulationgraphsvg) | Plot simulation experiment results as SVG graphs. |
+| [`convertCircuitJsonToPcbTexturePng`](#convertcircuitjsontopcbtexturepng) | Render PCB layouts to PNG textures using `@resvg/resvg-wasm`. |
 
 ## API
 
@@ -109,6 +110,40 @@ const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson, {
   Defaults to `false`.
 - `includeVersion` – if `true`, add a `data-circuit-to-svg-version` attribute to
   the root `<svg>`.
+
+## convertCircuitJsonToPcbTexturePng
+
+`convertCircuitJsonToPcbTexturePng(circuitJson: AnyCircuitElement[], options): Promise<{ png: Uint8Array; width: number; height: number; dataUrl?: string }>`
+
+Creates a PNG texture from a PCB layout using the `@resvg/resvg-wasm` renderer. Useful for applying board artwork onto 3D models or GLTF exports.
+
+```typescript
+import initWasm, { Resvg } from "@resvg/resvg-wasm"
+import wasmUrl from "@resvg/resvg-wasm/index_bg.wasm?url"
+import { convertCircuitJsonToPcbTexturePng } from "circuit-to-svg"
+
+const wasmBinary = await fetch(wasmUrl).then((res) => res.arrayBuffer())
+await initWasm(wasmBinary)
+
+const { dataUrl, width, height } = await convertCircuitJsonToPcbTexturePng(
+  circuitJson,
+  {
+    resvgModule: { Resvg },
+    output: "data-url",
+    textureWidth: 1024,
+    backgroundColor: "#004400",
+  },
+)
+```
+
+### Options
+
+- `textureWidth` and `textureHeight` – pixel dimensions forwarded to the SVG renderer. Defaults to a 1024×1024 texture.
+- `resvgModule` – **required.** Either the module exported by `@resvg/resvg-wasm` or an async loader returning `{ Resvg, initWasm? }`.
+- `wasmModule` and `wasmImportObject` – optional arguments passed to `initWasm` before rendering.
+- `resvgOptions` – additional options forwarded to the Resvg constructor (e.g. `fitTo`, `background`).
+- All [`convertCircuitJsonToPcbSvg`](#convertcircuitjsontopcbsvg) options except `width` and `height` are supported to customise the SVG prior to rasterisation.
+- `output` – choose between returning binary bytes (`"uint8array"`), a PNG data URL (`"data-url"`), or both (`"both"`).
 
 ## convertCircuitJsonToAssemblySvg
 
