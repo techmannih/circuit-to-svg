@@ -44,6 +44,7 @@ Explore the API sections below to render PCB, assembly, pinout, simulation, and 
 | [`convertCircuitJsonToSchematicSvg`](#convertcircuitjsontoschematicsvg) | Generate schematic SVG output from Circuit JSON. |
 | [`convertCircuitJsonToSchematicSimulationSvg`](#convertcircuitjsontoschematicsimulationsvg) | Overlay simulation data on schematic diagrams. |
 | [`convertCircuitJsonToPcbSvg`](#convertcircuitjsontopcbsvg) | Render PCB layouts as SVG graphics. |
+| [`convertCircuitJsonToPcbTexturePng`](#convertcircuitjsontopcbtexturepng) | Rasterize PCB layouts into PNG textures. |
 | [`convertCircuitJsonToSolderPasteMask`](#convertcircuitjsontosolderpastemask) | Create solder paste mask layers for fabrication. |
 | [`convertCircuitJsonToAssemblySvg`](#convertcircuitjsontoassemblysvg) | Produce assembly view SVGs for board visualization. |
 | [`convertCircuitJsonToPinoutSvg`](#convertcircuitjsontopinoutsvg) | Build annotated pinout diagrams for boards and modules. |
@@ -109,6 +110,33 @@ const pcbSvg = convertCircuitJsonToPcbSvg(circuitJson, {
   Defaults to `false`.
 - `includeVersion` – if `true`, add a `data-circuit-to-svg-version` attribute to
   the root `<svg>`.
+
+## convertCircuitJsonToPcbTexturePng
+
+`await convertCircuitJsonToPcbTexturePng(circuitJson: AnyCircuitElement[], options?): Uint8Array`
+
+Rasterizes the PCB layout into a PNG texture using [`@resvg/resvg-wasm`](https://github.com/RustSVG/resvg). This is useful when a
+bitmap texture is needed, such as for applying artwork to 3D models or web previews that require PNGs.
+
+```typescript
+import { convertCircuitJsonToPcbTexturePng } from "circuit-to-svg"
+
+const texture = await convertCircuitJsonToPcbTexturePng(circuitJson, {
+  matchBoardAspectRatio: true,
+  backgroundColor: "#222",
+  resvgOptions: {
+    fitTo: { mode: "width", value: 1024 },
+  },
+})
+```
+
+The returned `Uint8Array` contains the encoded PNG file contents. Write it to disk or forward it to other systems as needed.
+
+### Options
+
+- Accepts all options from [`convertCircuitJsonToPcbSvg`](#convertcircuitjsontopcbsvg).
+- `resvgOptions` – forward additional options directly to `Resvg` when rasterizing. Use this to control DPI, scaling (`fitTo`),
+  or background color. If `backgroundColor` is provided at the top level, it is used as a fallback for `resvgOptions.background`.
 
 ## convertCircuitJsonToAssemblySvg
 

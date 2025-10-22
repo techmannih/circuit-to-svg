@@ -36,6 +36,7 @@
     "vite-tsconfig-paths": "^5.0.1"
   },
   "dependencies": {
+    "@resvg/resvg-wasm": "^2.6.2",
     "@types/node": "^22.5.5",
     "bun-types": "^1.1.40",
     "calculate-elbow": "0.0.12",
