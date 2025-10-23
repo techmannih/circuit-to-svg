@@ -11,3 +11,11 @@ export type { PcbColorMap, PcbColorOverrides } from "./pcb/colors"
 export { getSoftwareUsedString } from "./utils/get-software-used-string"
 export { CIRCUIT_TO_SVG_VERSION } from "./package-version"
 export { createSvgObjectsForSchComponentPortHovers } from "./sch/svg-object-fns/create-svg-objects-for-sch-port-hover"
+export {
+  pcbBoardTextureDefs,
+  pcbBoardTextureFill,
+  pcbBoardTexturePngDataUrl,
+  PCB_BOARD_TEXTURE_PATTERN_ID,
+  PCB_BOARD_TEXTURE_SUPPORTED_COLOR,
+  PCB_BOARD_TEXTURE_TILE_SIZE,
+} from "./pcb/board-texture"

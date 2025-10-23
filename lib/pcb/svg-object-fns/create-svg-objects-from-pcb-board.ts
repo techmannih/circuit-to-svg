@@ -1,6 +1,10 @@
 import type { PCBBoard, Point } from "circuit-json"
 import { applyToPoint } from "transformation-matrix"
 import type { SvgObject } from "lib/svg-object"
+import {
+  PCB_BOARD_TEXTURE_SUPPORTED_COLOR,
+  pcbBoardTextureFill,
+} from "../board-texture"
 import type { PcbContext } from "../convert-circuit-json-to-pcb-svg"
 
 export function createSvgObjectsFromPcbBoard(
@@ -48,6 +52,18 @@ export function createSvgObjectsFromPcbBoard(
 
   path += " Z"
 
+  const boardColor =
+    ctx.layer === "bottom"
+      ? colorMap.soldermask.bottom ?? colorMap.soldermask.top
+      : colorMap.soldermask.top
+
+  const shouldUseTexture =
+    pcbBoardTextureFill !== null &&
+    ctx.layer !== "bottom" &&
+    boardColor === PCB_BOARD_TEXTURE_SUPPORTED_COLOR
+
+  const fillValue = shouldUseTexture ? pcbBoardTextureFill! : boardColor ?? "none"
+
   return [
     {
       name: "path",
@@ -57,7 +73,7 @@ export function createSvgObjectsFromPcbBoard(
       attributes: {
         class: "pcb-board",
         d: path,
-        fill: "none",
+        fill: fillValue,
         stroke: colorMap.boardOutline,
         "stroke-width": (0.1 * Math.abs(transform.a)).toString(),
         "data-type": "pcb_board",

@@ -44,6 +44,7 @@ import {
   createSvgObjectsForPcbGrid,
   type PcbGridOptions,
 } from "./svg-object-fns/create-svg-objects-for-pcb-grid"
+import { pcbBoardTextureDefs } from "./board-texture"
 import {
   DEFAULT_PCB_COLOR_MAP,
   type CopperColorMap,
@@ -341,6 +342,10 @@ export function convertCircuitJsonToPcbSvg(
     },
   ]
 
+  if (pcbBoardTextureDefs) {
+    children.push(pcbBoardTextureDefs)
+  }
+
   const gridObjects = createSvgObjectsForPcbGrid({
     grid: options?.grid,
     svgWidth,
@@ -383,6 +388,8 @@ export function convertCircuitJsonToPcbSvg(
   const softwareUsedString = getSoftwareUsedString(circuitJson)
   const version = CIRCUIT_TO_SVG_VERSION
 
+  const needsXlinkNamespace = pcbBoardTextureDefs !== null
+
   const svgObject: SvgObject = {
     name: "svg",
     type: "element",
@@ -390,6 +397,9 @@ export function convertCircuitJsonToPcbSvg(
       xmlns: "http://www.w3.org/2000/svg",
       width: svgWidth.toString(),
       height: svgHeight.toString(),
+      ...(needsXlinkNamespace && {
+        "xmlns:xlink": "http://www.w3.org/1999/xlink",
+      }),
       ...(softwareUsedString && {
         "data-software-used-string": softwareUsedString,
       }),

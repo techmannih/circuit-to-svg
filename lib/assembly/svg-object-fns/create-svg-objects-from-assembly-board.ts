@@ -1,6 +1,7 @@
 import type { PCBBoard, Point } from "circuit-json"
 import { applyToPoint, type Matrix } from "transformation-matrix"
 import type { SvgObject } from "lib/svg-object"
+import { pcbBoardTextureFill } from "../../pcb/board-texture"
 
 interface BoardStyle {
   fill: string
@@ -61,6 +62,13 @@ export function createSvgObjectsFromAssemblyBoard(
 
   path += " Z"
 
+  const defaultFill = style.fill ?? DEFAULT_BOARD_STYLE.fill
+  const shouldApplyTexture =
+    pcbBoardTextureFill !== null &&
+    (style.fill === undefined || style.fill === null || style.fill === "none")
+
+  const fillValue = shouldApplyTexture ? pcbBoardTextureFill! : defaultFill
+
   return [
     {
       name: "path",
@@ -70,7 +78,7 @@ export function createSvgObjectsFromAssemblyBoard(
       attributes: {
         class: "pcb-board",
         d: path,
-        fill: style.fill ?? DEFAULT_BOARD_STYLE.fill,
+        fill: fillValue,
         stroke: style.stroke ?? DEFAULT_BOARD_STYLE.stroke,
         "stroke-opacity":
           style.strokeOpacity ?? DEFAULT_BOARD_STYLE.strokeOpacity,
