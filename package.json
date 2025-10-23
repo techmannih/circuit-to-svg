@@ -41,5 +41,17 @@
     "calculate-elbow": "0.0.12",
     "svgson": "^5.3.1",
     "transformation-matrix": "^2.16.1"
+  },
+  "peerDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "@resvg/resvg-wasm": "^2.6.2"
+  },
+  "peerDependenciesMeta": {
+    "@resvg/resvg-wasm": {
+      "optional": true
+    },
+    "@resvg/resvg-js": {
+      "optional": true
+    }
   }
 }
