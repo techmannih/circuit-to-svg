@@ -16,6 +16,8 @@ export function createSvgObjectsFromPcbFabricationNoteText(
     font_size = 1,
     layer = "top",
     color,
+    pcb_fabrication_note_text_id,
+    pcb_component_id,
   } = pcbFabNoteText
 
   if (layerFilter && layer !== layerFilter) return []
@@ -58,6 +60,8 @@ export function createSvgObjectsFromPcbFabricationNoteText(
       fill: color || "rgba(255,255,255,0.5)",
       "data-type": "pcb_fabrication_note_text",
       "data-pcb-layer": "overlay",
+      "data-pcb-fabrication-note-text-id": pcb_fabrication_note_text_id,
+      "data-pcb-component-id": pcb_component_id,
     },
     children: [
       {
